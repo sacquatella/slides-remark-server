@@ -1,0 +1,14 @@
+slides-server
+slides-basic-server
+slides-remark-server
+slide-server
+.DS_Store
+.idea/
+.idea/*
+.slides-binaries/
+slides-binaries/
+vendor/github.com/
+vendor/golang.org/
+vendor/gopkg.in/
+tmp/
+home.md
