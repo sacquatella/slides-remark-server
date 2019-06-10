@@ -12,3 +12,4 @@ vendor/golang.org/
 vendor/gopkg.in/
 tmp/
 home.md
+slides-tests/

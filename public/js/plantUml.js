@@ -1,10 +1,7 @@
 /**
  * Created by s.acquatella on 06/09/2016.
  */
-
-var PLANTUML_SERVER="http://plantuml.com/plantuml/";
-
-
+const PLANTUML_SERVER = "http://www.plantuml.com/plantuml/";
 function encode64(data) {
     r = "";
     for (i=0; i<data.length; i+=3) {
@@ -56,12 +53,12 @@ function encode6bit(b) {
 
 function parsePlantUml(txt) {
     console.log("looking for plantuml diagram");
-    diagrams=[];
-    var i=0;
-    newLastContent=txt.replace(/\@startuml([\s\S]*?)(?!\@startuml)\@enduml/mg, function(plantuml) {
+    diagrams = [];
+    var i = 0;
+    newLastContent = txt.replace(/\@startuml([\s\S]*?)(?!\@startuml)\@enduml/mg, function (plantuml) {
         console.log(plantuml);
         plantuml = unescape(encodeURIComponent(plantuml));
-        return "![plantuml]("+PLANTUML_SERVER+"svg/"+encode64(RawDeflate.deflate(plantuml))+")";
+        return "![plantuml](" + PLANTUML_SERVER + "svg/" + encode64(RawDeflate.deflate(plantuml)) + ")";
     });
     return newLastContent;
 }

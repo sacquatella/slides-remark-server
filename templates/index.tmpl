@@ -8,8 +8,9 @@
 </head>
 <body>
 
-<script src="/public/js/remark-latest.min.js" type="text/javascript"></script>
-<script src="/public/js/mermaid.min.js" type="text/javascript"></script>
+<!-- <script src="/public/js/remark-latest.min.js" type="text/javascript"></script> -->
+<script src="/public/js/remark.js" type="text/javascript"></script>
+<!-- <script src="/public/js/mermaid.min.js" type="text/javascript"></script> -->
 <script src="/public/js/rawdeflate.js" type="text/javascript"></script>
 <script src="/public/js/plantUml.js" type="text/javascript"></script>
 <script src="/public/js/jquery-1.9.1.min.js"></script>
@@ -19,15 +20,20 @@
 <script src="/public/js/remarkchart.min.js" type="text/javascript"></script>
 
 
-<script>mermaid.initialize({startOnLoad:true});</script>
+<!--<script>mermaid.initialize({startOnLoad:true});</script>-->
 <script>
     var mySlidesName = location.search.split('slides=')[1];
     //var mySlidesName = {{ .SlideURI }}
 
     var slidesName = mySlidesName ? mySlidesName : 'home.md';
     var lastContent = "";
+    var planResponse = "";
     console.log(mySlidesName);
     console.log(slidesName);
+
+    function setContent(x) {
+        planResponse=x;
+    }
 
     var slideshow = remark.create({
         sourceUrl: slidesName,
@@ -40,22 +46,9 @@
     });
 
      // start remarkchart
-        remarkchart.init(slideshow);
+     remarkchart.init(slideshow);
 
-    $.ajax({
-        url: slidesName,
-        success: function( response ) {
-            if (lastContent!=response) {
-                slideshow.loadFromString(parsePlantUml(response));
-                if (m=window.location.hash.match(/\#(\d+)$/)) {
-                    console.log("goto slide "+m[1]);
-                    slideshow.gotoSlide(m[1]);
-                }
-                lastContent=response
-            }
-        }
-    });
-   // mermaid.initialize({startOnLoad:true});
+   //mermaid.initialize({startOnLoad:true});
 </script>
 
 </body>

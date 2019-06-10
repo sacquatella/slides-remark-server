@@ -5,15 +5,13 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
-//	_ "slides-remark-server/statik"
-    _ "github.com/sacquatella/slides-remark-server/statik"
-	
-	"strings"
-	"time"
+	//	_ "slides-remark-server/statik"
+	_ "github.com/sacquatella/slides-remark-server/statik"
 
 	"flag"
 	"github.com/gin-contrib/static"
-	"github.com/gin-gonic/contrib/ginrus"
+	"strings"
+	//	"github.com/gin-gonic/contrib/ginrus"
 	"github.com/gin-gonic/gin"
 	"github.com/rakyll/statik/fs"
 	"github.com/sirupsen/logrus"
@@ -97,21 +95,21 @@ func initialise() {
 
 // build home.md slide
 func buildHome() {
-	f, err := os.Create( slidepath + "/home.md")
+	f, err := os.Create(slidepath + "/home.md")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer f.Close()
 	_, err = f.WriteString("#" + title + "\n \n")
 
-	files, err := filepath.Glob(slidepath +"/" + prefix + "*.md")
+	files, err := filepath.Glob(slidepath + "/" + prefix + "*.md")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Debug(files)
 	for _, slide := range files {
-		cslide := strings.Replace(slide, slidepath + "/", "", -1)
+		cslide := strings.Replace(slide, slidepath+"/", "", -1)
 		csslide := strings.Replace(cslide, ".md", "", -1)
 		mdline := "- [" + csslide + "](?slides=" + cslide + ") \n"
 		_, err := f.WriteString(mdline)
@@ -148,13 +146,14 @@ func main() {
 	}
 
 	router := gin.New()
-
-	if gin.Mode() == "release" {
-		router.Use(ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true))
-		router.Use(ginrus.Ginrus(log, time.RFC3339, false))
-	} else {
-		router.Use(gin.Logger())
-	}
+	/*
+		if gin.Mode() == "release" {
+			router.Use(ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true))
+			router.Use(ginrus.Ginrus(log, time.RFC3339, false))
+		} else {
+			router.Use(gin.Logger())
+		}
+	*/
 
 	// define template
 	// Use binddata for html template
@@ -179,7 +178,7 @@ func main() {
 	router.Use(IndexMiddleware)
 
 	router.StaticFS("/public/", statikFS)
-	router.Use(static.Serve("/", static.LocalFile(slidepath + "/", false)))
+	router.Use(static.Serve("/", static.LocalFile(slidepath+"/", false)))
 
 	router.GET("/index", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.tmpl", gin.H{
