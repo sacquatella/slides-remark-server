@@ -2,6 +2,7 @@
 package main
 
 import (
+	"github.com/rs/zerolog"
 	"html/template"
 	"os"
 	"path/filepath"
@@ -9,12 +10,13 @@ import (
 	_ "github.com/sacquatella/slides-remark-server/statik"
 
 	"flag"
+	"github.com/gin-contrib/logger"
 	"github.com/gin-contrib/static"
 	"strings"
 	//	"github.com/gin-gonic/contrib/ginrus"
 	"github.com/gin-gonic/gin"
 	"github.com/rakyll/statik/fs"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
@@ -25,7 +27,6 @@ var theme = "remark" // remark theme also available
 var port = "3000"    // default http port
 var title = "SlideAsCode Server (SACS)"
 var useGB = true
-var log = logrus.New()
 var ratio = "16:9"
 var ratiolist = []string{"4:3", "16:9"}
 
@@ -56,8 +57,15 @@ func init() {
 // get env variables and initialise logs
 func initialise() {
 
-	log.Level = logrus.DebugLevel
-
+	log.Logger = log.Output(
+		zerolog.ConsoleWriter{
+			Out:     os.Stderr,
+			NoColor: false,
+		},
+	)
+	if gin.IsDebugging() {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
 	if os.Getenv("SLIDES_PATH") != "" {
 		slidepath = os.Getenv("SLIDES_PATH")
 	}
@@ -88,7 +96,7 @@ func initialise() {
 		ratio = os.Getenv("RATIO")
 		if !stringInSlice(ratio, ratiolist) {
 			ratio = "4:3"
-			log.Info("Provided ratio not supported .. ", ratio)
+			log.Info().Msgf("Provided ratio %s not supported .. ", ratio)
 		}
 	}
 }
@@ -97,24 +105,27 @@ func initialise() {
 func buildHome() {
 	f, err := os.Create(slidepath + "/home.md")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Msg(err.Error())
 	}
 	defer f.Close()
-	_, err = f.WriteString("#" + title + "\n \n")
+	_, err = f.WriteString("# " + title + "\n \n")
 
 	files, err := filepath.Glob(slidepath + "/" + prefix + "*.md")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Msg(err.Error())
 	}
 
-	log.Debug(files)
 	for _, slide := range files {
-		cslide := strings.Replace(slide, slidepath+"/", "", -1)
+
+		slidepath = strings.TrimPrefix(slidepath, "./")
+
+		replaceStr := slidepath + string(os.PathSeparator)
+		cslide := strings.Replace(slide, replaceStr, "", -1)
 		csslide := strings.Replace(cslide, ".md", "", -1)
 		mdline := "- [" + csslide + "](?slides=" + cslide + ") \n"
 		_, err := f.WriteString(mdline)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal().Msg(err.Error())
 		}
 	}
 	f.Sync()
@@ -142,18 +153,16 @@ func main() {
 	// use statik to serve js and themes css
 	statikFS, err := fs.New()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Msg(err.Error())
 	}
 
 	router := gin.New()
-	/*
-		if gin.Mode() == "release" {
-			router.Use(ginrus.Ginrus(logrus.StandardLogger(), time.RFC3339, true))
-			router.Use(ginrus.Ginrus(log, time.RFC3339, false))
-		} else {
-			router.Use(gin.Logger())
-		}
-	*/
+
+	if gin.Mode() == "release" {
+		router.Use(logger.SetLogger())
+	} else {
+		router.Use(gin.Logger())
+	}
 
 	// define template
 	// Use binddata for html template
@@ -162,10 +171,10 @@ func main() {
 		b, _ := Asset("templates/index.tmpl")
 		t, _ = template.New("index.tmpl").Parse(string(b))
 		router.SetHTMLTemplate(t)
-		log.Debug("Use embeded index.tmpl template, go-bindata")
+		log.Debug().Msg("Use embeded index.tmpl template, go-bindata")
 	} else {
 		router.LoadHTMLFiles("templates/index.tmpl")
-		log.Debug("Use local index.tmpl template localized in templates folder")
+		log.Debug().Msg("Use local index.tmpl template localized in templates folder")
 	}
 
 	router.GET("/ping", func(c *gin.Context) {
